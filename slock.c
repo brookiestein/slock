@@ -16,9 +16,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <X11/extensions/Xrandr.h>
+#include <X11/extensions/dpms.h>
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/XF86keysym.h>
 #include <Imlib2.h>
 
 #include <pthread.h>
@@ -227,6 +229,18 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 			    IsPrivateKeypadKey(ksym))
 				continue;
 			switch (ksym) {
+      case XF86XK_AudioPlay:
+      case XF86XK_AudioStop:
+      case XF86XK_AudioPrev:
+      case XF86XK_AudioNext:
+      case XF86XK_AudioRaiseVolume:
+      case XF86XK_AudioLowerVolume:
+      case XF86XK_AudioMute:
+      case XF86XK_AudioMicMute:
+      case XF86XK_MonBrightnessDown:
+      case XF86XK_MonBrightnessUp:
+        XSendEvent(dpy, DefaultRootWindow(dpy), True, KeyPressMask, &ev);
+        break;
 			case XK_Return:
 				passwd[len] = '\0';
 				errno = 0;
@@ -409,6 +423,7 @@ main(int argc, char **argv) {
 	const char *hash;
 	Display *dpy;
 	int s, nlocks, nscreens;
+	CARD16 standby, suspend, off;
 
 	ARGBEGIN {
 	case 'v':
@@ -523,6 +538,20 @@ main(int argc, char **argv) {
 	if (nlocks != nscreens)
 		return 1;
 
+	/* DPMS magic to disable the monitor */
+	if (!DPMSCapable(dpy))
+		die("slock: DPMSCapable failed\n");
+	if (!DPMSEnable(dpy))
+		die("slock: DPMSEnable failed\n");
+	if (!DPMSGetTimeouts(dpy, &standby, &suspend, &off))
+		die("slock: DPMSGetTimeouts failed\n");
+	if (!standby || !suspend || !off)
+		die("slock: at least one DPMS variable is zero\n");
+	if (!DPMSSetTimeouts(dpy, monitortime, monitortime, monitortime))
+		die("slock: DPMSSetTimeouts failed\n");
+
+	XSync(dpy, 0);
+
 	/* run post-lock command */
 	if (argc > 0) {
 		switch (fork()) {
@@ -567,6 +596,10 @@ main(int argc, char **argv) {
 	pthread_create(&thredid, NULL, displayTime, &displayData);
 	/* Wait for the password */
 	readpw(dpy, &rr, locks, nscreens, hash,crs,surfaces);
+
+	/* reset DPMS values to inital ones */
+	DPMSSetTimeouts(dpy, standby, suspend, off);
+	XSync(dpy, 0);
 
 	return 0;
 }
