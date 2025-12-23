@@ -30,9 +30,6 @@
 #include "arg.h"
 #include "util.h"
 
-/* Ensure we're using crypt() from this header and not from unistd. */
-#include <crypt.h>
-
 char *argv0;
 static int pam_conv(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr);
 struct pam_conv pamc = {pam_conv, NULL};
