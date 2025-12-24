@@ -13,7 +13,7 @@ static const char *colorname[NUMCOLS] = {
 	[INIT] =   "black",     /* after initialization */
 	[INPUT] =  "#005577",   /* during input */
 	[FAILED] = "#CC3333",   /* wrong password */
-	[PAM] =    "#9400D3",   /* waiting for PAM */
+	[PAM] =    "#006666",   /* waiting for PAM */
 };
 
 /* treat a cleared input like a wrong password (color) */

@@ -89,7 +89,7 @@ pam_conv(int num_msg, const struct pam_message **msg,
 		if (msg[i]->msg_style == PAM_PROMPT_ECHO_OFF &&
 				strncmp(msg[i]->msg, "Password: ", 10) == 0) {
 			 size_t passwd_size = strlen(passwd);
-			 
+
 			 struct pam_response *resp_msg = malloc(sizeof(struct pam_response));
 			 if (!resp_msg)
 				  die("malloc failed\n");
@@ -187,16 +187,16 @@ refresh(Display *dpy, Window win , int screen, struct tm *time, cairo_t *cr, cai
 	int ypos = 90;
 
 	strftime(text, sizeof text, "%a %Y-%m-%d %H:%M:%S", time);
-	
+
 	XClearWindow(dpy, win);
-	
+
     cairo_set_source_rgb(cr, textcolorred, textcolorgreen, textcolorblue);
 	cairo_select_font_face(cr, textfamily, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
     cairo_set_font_size(cr, textsize);
 	cairo_move_to(cr, xpos, ypos);
 	cairo_show_text(cr, text);
 	cairo_surface_flush(sfc);
-	
+
 	XFlush(dpy);
 }
 
@@ -205,11 +205,11 @@ static void *
 displayTime(void *input)
 {
 	 struct displayData *displayData = (struct displayData *) input;
-	 
+
 	 while (1) {
 		  pthread_mutex_lock(&mutex); /* Mutex to prevent interference with refreshing screen while typing password */
 		  time_t rawtime = time(NULL);
-		  
+
 		  struct tm *tm = localtime(&rawtime);
 
 		  for (int i = 0; i < displayData->nscreens; ++i) {
@@ -222,11 +222,11 @@ displayTime(void *input)
 					displayData->surfaces[i]
 			   );
 		  }
-		  		  
+
 		  pthread_mutex_unlock(&mutex);
 		  sleep(1);
 	 }
-	 
+
 	 return NULL;
 }
 
@@ -251,21 +251,21 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 		if (ev.type == KeyPress) {
 			explicit_bzero(&buf, sizeof(buf));
 			num = XLookupString(&ev.xkey, buf, sizeof(buf), &ksym, 0);
-			
+
 			if (IsKeypadKey(ksym)) {
 				if (ksym == XK_KP_Enter)
 					ksym = XK_Return;
 				else if (ksym >= XK_KP_0 && ksym <= XK_KP_9)
 					ksym = (ksym - XK_KP_0) + XK_0;
 			}
-			
+
 			if (IsFunctionKey(ksym) ||
 			    IsKeypadKey(ksym) ||
 			    IsMiscFunctionKey(ksym) ||
 			    IsPFKey(ksym) ||
 			    IsPrivateKeypadKey(ksym))
 				continue;
-			
+
 			switch (ksym)
 			{
 			case XK_Return:
@@ -291,16 +291,16 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 					  running = 0;
 				 else
 					  fprintf(stderr, "slock: %s\n", pam_strerror(pamh, retval));
-				 pam_end(pamh, retval);					  
+				 pam_end(pamh, retval);
 
 				 explicit_bzero(&passwd, sizeof(passwd));
 				 len = 0;
-				 
+
 				 if (running) {
 					  XBell(dpy, 100);
 					  failure = 1;
 				 }
-				
+
 				 break;
 			case XK_Escape:
 				 explicit_bzero(&passwd, sizeof(passwd));
@@ -318,21 +318,21 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 				 }
 				 break;
 			}
-			
+
 			color = len ? INPUT : ((failure || failonclear) ? FAILED : INIT);
-			
+
 			if (running && oldc != color) {
 				 pthread_mutex_lock(&mutex); /* Stop the time refresh thread from interfering */
-				 
+
 				 for (screen = 0; screen < nscreens; screen++) {
 					  if (locks[screen]->bgmap)
 						   XSetWindowBackgroundPixmap(dpy, locks[screen]->win, locks[screen]->bgmap);
 					  else
 						   XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[0]);
-					  
+
 					  XClearWindow(dpy, locks[screen]->win);
 					  time_t rawtime = time(NULL);
-					  
+
 					  /* Redraw the time after screen cleared. */
 					  refresh(dpy,
 							  locks[screen]->win,
@@ -342,14 +342,14 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 							  surfaces[screen]
 					  );
 				 }
-				 
+
 				 pthread_mutex_unlock(&mutex);
 				 oldc = color;
 			}
 		} else if (rr->active && ev.type == rr->evbase + RRScreenChangeNotify) {
 			rre = (XRRScreenChangeNotifyEvent*)&ev;
 			pthread_mutex_lock(&mutex); /* Stop the time refresh thread from interfering */
-			
+
 			for (screen = 0; screen < nscreens; screen++) {
 				if (locks[screen]->win == rre->window) {
 					if (rre->rotation == RR_Rotate_90 ||
@@ -407,7 +407,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	/* init */
 	wa.override_redirect = 1;
 	wa.background_pixel = lock->colors[INIT];
-	
+
 	lock->win = XCreateWindow(dpy, lock->root, 0, 0,
 	                          DisplayWidth(dpy, lock->screen),
 	                          DisplayHeight(dpy, lock->screen),
@@ -415,10 +415,10 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	                          CopyFromParent,
 	                          DefaultVisual(dpy, lock->screen),
 	                          CWOverrideRedirect | CWBackPixel, &wa);
-	
+
 	if(lock->bgmap)
 		 XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
-	
+
 	lock->pmap = XCreateBitmapFromData(dpy, lock->win, curs, 8, 8);
 	invisible = XCreatePixmapCursor(dpy, lock->pmap, lock->pmap,
 	                                &color, &color, 0, 0);
@@ -432,7 +432,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 			                      PointerMotionMask, GrabModeAsync,
 			                      GrabModeAsync, None, invisible, CurrentTime);
 		}
-		
+
 		if (kbgrab != GrabSuccess) {
 			kbgrab = XGrabKeyboard(dpy, lock->root, True,
 			                       GrabModeAsync, GrabModeAsync, CurrentTime);
@@ -527,7 +527,7 @@ main(int argc, char **argv) {
 	/* Load picture */
 	Imlib_Image buffer = imlib_load_image(background_image);
 	imlib_context_set_image(buffer);
-	
+
 	int background_image_width = imlib_image_get_width();
 	int background_image_height = imlib_image_get_height();
 
@@ -560,14 +560,14 @@ main(int argc, char **argv) {
 	nscreens = ScreenCount(dpy);
 	if (!(locks = calloc(nscreens, sizeof(struct lock *))))
 		die("slock: out of memory\n");
-	
+
 	for (nlocks = 0, s = 0; s < nscreens; s++) {
 		if ((locks[s] = lockscreen(dpy, &rr, s)) != NULL)
 			nlocks++;
 		else
 			break;
 	}
-	
+
 	XSync(dpy, 0);
 
 	/* did we manage to lock everything? */
@@ -591,35 +591,35 @@ main(int argc, char **argv) {
     struct displayData displayData;
 	cairo_surface_t **surfaces;
 	cairo_t **crs;
-	
+
     if (!(surfaces=calloc(nscreens, sizeof(cairo_surface_t*)))){
 		die("Out of memory");
 	}
-	
+
 	if (!(crs=calloc(nscreens, sizeof(cairo_t*)))){
 		die("Out of memory");
 	}
-	
+
 	for (int k = 0; k < nscreens; k++){
 		Drawable win = locks[k]->win;
 		int screen = locks[k]->screen;
-		
+
 		XMapWindow(dpy, win);
-		
+
 		surfaces[k] = cairo_xlib_surface_create(dpy, win,
 												DefaultVisual(dpy, screen),
 												DisplayWidth(dpy, screen),
 												DisplayHeight(dpy, screen));
-		
+
 		crs[k] = cairo_create(surfaces[k]);
 	}
-	
+
 	displayData.dpy = dpy;
 	displayData.locks = locks;
 	displayData.nscreens = nscreens;
 	displayData.crs = crs;
 	displayData.surfaces = surfaces;
-	
+
     /* Start the thread that redraws time every 5 seconds */
 	pthread_create(&thredid, NULL, displayTime, &displayData);
 	/* Wait for the password */
