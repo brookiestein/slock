@@ -20,7 +20,7 @@ static const char *colorname[NUMCOLS] = {
 static const int failonclear = 0;
 
 /* Background image path, should be available to the user above. */
-static const char *background_image = "/home/brayan/Wallpapers/wallhaven-gwwxwl_1920x1080.png";
+static const char *background_image = "/home/brayan/Wallpapers/pixel-reading.png";
 
 /* PAM service that's used for authentication */
 static const char *pam_service = "login";

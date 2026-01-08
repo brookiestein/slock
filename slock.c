@@ -184,7 +184,7 @@ refresh(Display *dpy, Window win , int screen, struct tm *time, cairo_t *cr, cai
 	int margin = 10;
 	int pixels = margin * 72;
 	int xpos = DisplayWidth(dpy, screen) - sizeof text - pixels;
-	int ypos = 90;
+	int ypos = DisplayHeight(dpy, screen) - 100;
 
 	strftime(text, sizeof text, "%a %Y-%m-%d %H:%M:%S", time);
 
